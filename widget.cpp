@@ -33,7 +33,7 @@ Widget::Widget(QWidget *parent)
 Widget::~Widget() {
 }
 
-void Widget::timerEvent(QTimerEvent *e) {
+void Widget::timerEvent(QTimerEvent *) {
     update();
 }
 
@@ -42,17 +42,25 @@ void Widget::keyPressEvent(QKeyEvent *e) {
     case Qt::Key_Escape:
         qApp->quit();
         break;
+
+    case Qt::Key_R:
+        randomize();
+        break;
     }
 }
 
-void Widget::mousePressEvent(QMouseEvent *e) {
+void Widget::mousePressEvent(QMouseEvent *) {
 }
 
 void Widget::mouseMoveEvent(QMouseEvent *e) {
     mousePos = e->pos();
 }
 
-void Widget::mouseReleaseEvent(QMouseEvent *e) {
+void Widget::mouseReleaseEvent(QMouseEvent *) {
+}
+
+void Widget::leaveEvent(QEvent *) {
+    mousePos = QPoint();
 }
 
 void Widget::paintEvent(QPaintEvent *) {
@@ -79,8 +87,9 @@ void Widget::paintEvent(QPaintEvent *) {
 void Widget::drawDigit(QPainter &p, int i, int j, int digit) {
     const double cellSize = (double)width() / fieldWidth;
 
-    if (qAbs(i * cellSize - mousePos.x()) < cellSize && qAbs(j * cellSize - mousePos.y()) < cellSize)
-        p.fillRect(i * cellSize, j * cellSize, cellSize, cellSize, QColor(Qt::lightGray).lighter(110));
+    if (!mousePos.isNull())
+        if (qAbs((i + 0.5) * cellSize - mousePos.x()) < cellSize / 2 && qAbs((j + 0.5) * cellSize - mousePos.y()) < cellSize / 2)
+            p.fillRect(i * cellSize, j * cellSize, cellSize, cellSize, QColor(Qt::lightGray).lighter(110));
 
     if (digit > 0) {
         p.setPen(QPen(digitColors[digit - 1]));
@@ -89,6 +98,9 @@ void Widget::drawDigit(QPainter &p, int i, int j, int digit) {
 }
 
 void Widget::randomize() {
+    for (int i = 0; i < fieldWidth; i++)
+        field[i].fill(false);
+
     for (int m = 0; m < mines; m++) {
         int i, j;
 
